@@ -55,8 +55,40 @@ if [ -n "$NPM_MIRROR" ]; then
 	npm config set registry $NPM_MIRROR
 fi
 
-echo "---> Building your Node application from source"
-npm install
+if [ -f "yarn.lock" ]; then
+	echo "---> Found yarn.lock, Installing Yarn"
+	npm install -g yarn
+
+	echo "---> Installing all dependencies by Yarn"
+	yarn install --prod=false
+else
+	echo "---> Installing all dependencies by NPM"
+	npm install	
+fi
+
+if [ -f "bower.json" ]; then
+	echo "---> Found bower.json, Installing Bower"
+	npm install -g bower
+
+	echo "---> Installing all dependencies by Bower"
+	bower install
+fi
+
+if [ ! -z $NEED_BUILD ]; then
+	echo "---> Building source code"
+  	npm run build
+
+	echo "---> Removing all dependencies"
+	rm -rf node_modules
+
+	if [ -f "yarn.lock" ]; then
+		echo "---> Installing all dependencies for runtime by Yarn"
+		yarn install --prod=false
+	else
+		echo "---> Installing all dependencies for runtime by NPM"
+		npm install	--production
+	fi
+fi
 
 # Fix source directory permissions
 fix-permissions ./
